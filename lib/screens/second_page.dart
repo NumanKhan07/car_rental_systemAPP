@@ -1,106 +1,129 @@
-// second_page.dart
 import 'package:flutter/material.dart';
-import 'third_page.dart';
+import 'weather_screen.dart';  // Import the weather screen
 import '../models/car.dart';  // Import the Car model
+import '../screens/third_page.dart';
+class SecondPage extends StatefulWidget {
+  @override
+  _SecondPageState createState() => _SecondPageState();
+}
 
-class SecondPage extends StatelessWidget {
+class _SecondPageState extends State<SecondPage> {
+  // List of cars
+  final List<Car> cars = [
+    Car(name: 'Ford Mustang', imageUrl: 'assets/images/ford.png', pricePerDay: 100.0),
+    Car(name: 'Honda Civic', imageUrl: 'assets/images/civic.png', pricePerDay: 80.0),
+    Car(name: 'Toyota Corolla', imageUrl: 'assets/images/car.png', pricePerDay: 70.0),
+    Car(name: 'Suzuki Mehran', imageUrl: 'assets/images/Mehran1.png', pricePerDay: 50.0),
+  ];
+
+  // View type (ListView or GridView)
+  bool isGridView = false;
+
   @override
   Widget build(BuildContext context) {
-    // Create Car instances
-    Car ford = Car(
-      name: 'Ford Mustang',
-      imageUrl: 'assets/images/ford.png',
-      pricePerDay: 100.0,
-    );
-
-    Car civic = Car(
-      name: 'Honda Civic',
-      imageUrl: 'assets/images/civic.png',
-      pricePerDay: 80.0,
-    );
-
-    Car corolla = Car(
-      name: 'Toyota Corolla',
-      imageUrl: 'assets/images/car.png',
-      pricePerDay: 70.0,
-    );
-
-    Car suzuki = Car(
-      name: 'Suzuki Mehran',
-      imageUrl: 'assets/images/Mehran1.png',
-      pricePerDay: 50.0,
-    );
-
     return Scaffold(
       appBar: AppBar(
         title: Text('Available Cars'),
-      ),
-      body: Center(
-        child: SingleChildScrollView(  // Ensure scrolling
-          child: Column(
-            mainAxisAlignment: MainAxisAlignment.center,
-            children: [
-              buildCarSection(context, ford),
-              buildCarSection(context, civic),
-              buildCarSection(context, corolla),
-              buildCarSection(context, suzuki),
-            ],
-          ),
-        ),
-      ),
-    );
-  }
-
-  // Helper method to build each car section
-  Widget buildCarSection(BuildContext context, Car car) {
-    return Padding(
-      padding: const EdgeInsets.symmetric(vertical: 10.0),
-      child: Column(
-        children: [
-          Image.asset(
-            car.imageUrl,
-            width: 300,
-            height: 200,
-            fit: BoxFit.cover,
-          ),
-          SizedBox(height: 10),
-          Text(
-            car.name,
-            style: TextStyle(
-              fontSize: 22,
-              fontWeight: FontWeight.bold,
-            ),
-          ),
-          ElevatedButton(
+        actions: [
+          // Toggle button for ListView/GridView
+          IconButton(
+            icon: Icon(isGridView ? Icons.list : Icons.grid_on),
             onPressed: () {
-              navigateWithAnimation(context, car);
+              setState(() {
+                isGridView = !isGridView; // Toggle between grid and list view
+              });
             },
-            child: Text('See ${car.name} Details'),
           ),
         ],
       ),
+      body: Padding(
+        padding: const EdgeInsets.all(8.0),
+        child: isGridView ? _buildGridView() : _buildListView(),
+      ),
+      floatingActionButton: FloatingActionButton(
+        onPressed: () {
+          // Navigate to the Weather screen
+          Navigator.push(
+            context,
+            MaterialPageRoute(builder: (context) => WeatherScreen()),
+          );
+        },
+        child: Icon(Icons.cloud),
+        tooltip: 'Check Weather',
+      ),
     );
   }
 
-  // Reusable method to navigate with slide animation
-  void navigateWithAnimation(BuildContext context, Car car) {
-    Navigator.push(
-      context,
-      PageRouteBuilder(
-        pageBuilder: (context, animation, secondaryAnimation) => ThirdPage(car: car),
-        transitionsBuilder: (context, animation, secondaryAnimation, child) {
-          const begin = Offset(1.0, 0.0); // Slide from the right
-          const end = Offset.zero;
-          const curve = Curves.easeInOut;
+  // ListView builder
+  Widget _buildListView() {
+    return ListView.builder(
+      itemCount: cars.length,
+      itemBuilder: (context, index) {
+        return _buildCarItem(context, cars[index]);
+      },
+    );
+  }
 
-          var tween = Tween(begin: begin, end: end).chain(CurveTween(curve: curve));
-          var offsetAnimation = animation.drive(tween);
+  // GridView builder
+  Widget _buildGridView() {
+    return GridView.builder(
+      gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
+        crossAxisCount: 2,  // You can adjust the number of items per row here
+        crossAxisSpacing: 10.0,
+        mainAxisSpacing: 10.0,
+      ),
+      itemCount: cars.length,
+      itemBuilder: (context, index) {
+        return _buildCarItem(context, cars[index]);
+      },
+    );
+  }
 
-          return SlideTransition(
-            position: offsetAnimation,
-            child: child,
-          );
-        },
+  // Helper method to build each car item
+  Widget _buildCarItem(BuildContext context, Car car) {
+    return GestureDetector(
+      onTap: () {
+        // Navigate to the Third Page (Car Details)
+        Navigator.push(
+          context,
+          MaterialPageRoute(
+            builder: (context) => ThirdPage(car: car),
+          ),
+        );
+      },
+      child: Card(
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(10),
+        ),
+        elevation: 5,
+        child: Column(
+          children: [
+            Image.asset(
+              car.imageUrl,
+              width: 150,
+              height: 100,
+              fit: BoxFit.cover,
+            ),
+            SizedBox(height: 10),
+            Text(
+              car.name,
+              style: TextStyle(
+                fontSize: 18,
+                fontWeight: FontWeight.bold,
+              ),
+              textAlign: TextAlign.center,
+            ),
+            SizedBox(height: 5),
+            Text(
+              '\$${car.pricePerDay.toStringAsFixed(2)}/day',
+              style: TextStyle(
+                fontSize: 16,
+                color: Colors.green,
+              ),
+              textAlign: TextAlign.center,
+            ),
+          ],
+        ),
       ),
     );
   }
